@@ -196,10 +196,7 @@ def get_retire_data(params):
             retire_age_year = bits[0].split()[0]
             retire_year = bits[1]
             benefit_raw = collector[key]
-            try:
-                benefit = int(benefit_raw.split('.')[0].replace(',', '').replace('$', ''))
-            except:
-                benefit = 0
+            benefit = int(benefit_raw.split('.')[0].replace(',', '').replace('$', ''))
             if retire_age_year == str(fra_tuple[0]):
                 results['data']['full retirement age'] = retire_age_all
                 BENS['age %s' % retire_age_year] = benefit

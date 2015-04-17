@@ -23,6 +23,25 @@ with open(datafile, 'r') as f:
     for year in age_map:
         age_map[year] = tuple(age_map[year])
 
+def get_current_age(dob):
+    today = datetime.date.today()
+    try:
+        DOB = parser.parse(dob).date()
+    except:
+        return None
+    else:        
+        if DOB and DOB <= today:
+            try: # raised when birth date is February 29 and the current year is not a leap year
+                birthday = DOB.replace(year=today.year)
+            except ValueError:
+                birthday = DOB.replace(year=today.year, day=DOB.day-1)
+            if birthday > today:
+                return today.year - DOB.year - 1
+            else:
+                return today.year - DOB.year
+        else:
+            return None
+
 def yob_test(yob=None):
     """
     tests to make sure suppied birth year is valid;
@@ -85,14 +104,15 @@ def past_fra_test(dob=None):
     months_at_birth = DOB.year*12 + DOB.month - 1
     months_today = today.year*12 + today.month - 1
     delta = months_today - months_at_birth
-    age_tuple = (math.floor(delta/12), (delta%12))
+    age_tuple = (int(math.floor(delta/12)), (delta%12))
+    print "age_tuple: %s; fra_tuple: %s" % (age_tuple, fra_tuple)
     if age_tuple[0] < 22:
         return 'too young to calculate benefits'
     if age_tuple[0] > fra_tuple[0]:
         return True
-    elif age_tuple[0] < fra_tuple:
+    elif age_tuple[0] < fra_tuple[0]:
         return False
-    elif age_tuple[1] >= fra_tuple[1]:
+    elif age_tuple[0] == fra_tuple[0] and age_tuple[1] >= fra_tuple[1]:
         return True
     else:
         return False

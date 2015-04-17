@@ -1,9 +1,7 @@
 import os
 import sys
 import json
-import datetime
 from datetime import timedelta
-today = datetime.datetime.now().date()
 
 import mock
 
@@ -15,8 +13,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
 
 from django.test import TestCase
 
-from ..ss_utilities import get_retirement_age, get_delay_bonus, yob_test, age_map, past_fra_test
-from ..ss_calculator import get_retire_data, num_test, parse_details, requests, interpolate_benefits
+from ..ss_utilities import datetime, get_retirement_age, get_delay_bonus, yob_test, age_map, get_current_age, past_fra_test
+from ..ss_calculator import requests, get_retire_data, num_test, parse_details, interpolate_benefits
+today = datetime.date.today()
 # from mock import Mock, patch
 
 class UtilitiesTests(TestCase):
@@ -110,7 +109,6 @@ class UtilitiesTests(TestCase):
         for key in sorted(bens.keys())[8:]:
             self.assertTrue(bens[key] != 0)
 
-
     def test_parse_details(self):
         sample_rows = [
             "early: Base year for indexing is 2013.  Bend points are 826 & 4980",
@@ -133,6 +131,28 @@ class UtilitiesTests(TestCase):
         ]
         for tup in inputs:
             self.assertEqual(num_test(tup[0]), tup[1])
+
+    @mock.patch('datetime.date')
+    def test_get_current_age(self, mock_datetime):
+        fake_today = datetime.datetime(2000, 1, 2).date()
+        mock_datetime.today.return_value = fake_today
+        age_pairs = [
+        ( '1999-1-1', 1),
+        ( '1980-1-1', 20),
+        ( '1980-1-3', 19),
+        ( '1940-1-1', 60),
+        ( '1920-1-1', 80),
+        ( '2001-1-1', None),
+        ( '1999-1-xx', None),
+        ( '2000-1-2', 0),
+        ( '1999-1-3', 0)]
+        print "fake_today is %s" % fake_today
+        for pair in age_pairs:
+            print "get_current_age(%s) is %s" % (pair[0], get_current_age(pair[0]))
+            self.assertEqual(get_current_age(pair[0]), pair[1])
+        fake_today = datetime.datetime(2005, 2, 28).date()
+        mock_datetime.today.return_value = fake_today
+        self.assertEqual(get_current_age('2000-2-29'), 5)
 
     def test_get_retirement_age(self):
         """ given a worker's birth year, 
@@ -170,12 +190,14 @@ class UtilitiesTests(TestCase):
         too_young = "%s" % (today-timedelta(days=21*365))
         invalid = "%s" % (today+timedelta(days=365))
         edge = "%s" % (today-timedelta(days=67*365))
+        month_edge = "%s" % datetime.date(1949, 3, 1)
         self.assertTrue(past_fra_test(too_old) == True)
         self.assertTrue(past_fra_test(ok) == False)
         self.assertTrue(past_fra_test(too_young) == 'too young to calculate benefits')
         self.assertTrue(past_fra_test(invalid) == "invalid birth year")
         self.assertTrue(past_fra_test(way_old) == True)
-        self.assertTrue(past_fra_test(edge) == False)
+        self.assertTrue(past_fra_test(edge) == True)
+        self.assertTrue(past_fra_test(month_edge) == True)
 
     def test_age_map(self):
         self.assertTrue(isinstance(age_map, dict))
@@ -282,8 +304,10 @@ class UtilitiesTests(TestCase):
     @mock.patch('requests.post')
     def test_ss_calculator_bad_request(self, mock_requests):
         mock_requests.return_value.reason = 'Not found'
+        self.sample_params['yob'] = 1966
         results = json.loads(get_retire_data(self.sample_params))
-        self.assertTrue('error' in results)
+        print "results['error'] is %s" % results['error']
+        self.assertTrue('fail' in results['error'])
 
 
         
