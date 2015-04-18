@@ -30,7 +30,7 @@ def get_current_age(dob):
     except:
         return None
     else:        
-        if DOB and DOB <= today:
+        if DOB and DOB < today:
             try: # raised when birth date is February 29 and the current year is not a leap year
                 birthday = DOB.replace(year=today.year)
             except ValueError:

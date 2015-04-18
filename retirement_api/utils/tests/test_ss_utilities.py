@@ -144,7 +144,7 @@ class UtilitiesTests(TestCase):
         ( '1920-1-1', 80),
         ( '2001-1-1', None),
         ( '1999-1-xx', None),
-        ( '2000-1-2', 0),
+        ( '2000-1-2', None),
         ( '1999-1-3', 0)]
         print "fake_today is %s" % fake_today
         for pair in age_pairs:
