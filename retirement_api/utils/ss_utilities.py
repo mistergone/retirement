@@ -91,14 +91,14 @@ def past_fra_test(dob=None):
     tests whether a person is past his/her full retirement age
     """
     if not dob:
-        return 'invalid birth year'
+        return 'invalid birth year entered'
     DOB = parser.parse(dob).date()
     today = datetime.datetime.now().date()
-    if DOB > today:
-        return 'invalid birth year'
+    if DOB >= today:
+        return 'invalid birth year entered'
     fra_tuple = get_retirement_age(DOB.year)
     if not fra_tuple:
-        return 'invalid birth year'
+        return 'invalid birth year entered'
     fra_year = fra_tuple[0]
     fra_month = fra_tuple[1]
     months_at_birth = DOB.year*12 + DOB.month - 1
@@ -107,7 +107,7 @@ def past_fra_test(dob=None):
     age_tuple = (int(math.floor(delta/12)), (delta%12))
     print "age_tuple: %s; fra_tuple: %s" % (age_tuple, fra_tuple)
     if age_tuple[0] < 22:
-        return 'too young to calculate benefits'
+        return 'Visitor too young to calculate benefits'
     if age_tuple[0] > fra_tuple[0]:
         return True
     elif age_tuple[0] < fra_tuple[0]:
